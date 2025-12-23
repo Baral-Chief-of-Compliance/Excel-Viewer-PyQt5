@@ -1,0 +1,4 @@
+APP_WITDH = 1000
+APP_HEIGHT = 500
+APP_TITEL = 'Excel Viewe'
+APP_VERSION = '1.0'
