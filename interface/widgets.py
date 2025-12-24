@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from PyQt5.QtWidgets import QLabel, QPushButton, QVBoxLayout,\
 QHBoxLayout, QWidget, QFileDialog, QMessageBox, QTableWidget,\
 QTableWidgetItem
@@ -26,7 +28,7 @@ class ExcelLoadDialog(QWidget):
         self.excel_info_layout : QHBoxLayout = QHBoxLayout()
         self.excel_file = None
         self.workbook = None
-        
+
         self.init_ui()
 
 
@@ -165,7 +167,13 @@ class ExcelTableWidget(QTableWidget):
 
             for row in rows:
                 for cell in row:
-                    item = QTableWidgetItem(cell.value)
+                    value = None
+                    if isinstance(cell.value, datetime):
+                        value = cell.value.strftime("%d.%m.%Y %H:%M")
+                    else:
+                        value = cell.value
+                    item = QTableWidgetItem(value)
+
                     self.setItem(
                         cell.row,
                         cell.column,
