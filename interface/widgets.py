@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QLabel, QPushButton, QVBoxLayout,\
 QHBoxLayout, QWidget, QFileDialog, QMessageBox, QTableWidget,\
 QTableWidgetItem
 from PyQt5.QtCore import pyqtSignal
+from PyQt5 import QtWidgets
 from openpyxl import Workbook
 
 from utils.excel_converters import ExcelConverter
@@ -132,6 +133,7 @@ class ExcelTableWidget(QTableWidget):
         super(ExcelTableWidget, self).__init__()
         self.wb = wb
         self.init_table()
+        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
 
     def init_table(self):
@@ -155,10 +157,12 @@ class ExcelTableWidget(QTableWidget):
 
             for row in rows:
                 for cell in row:
+                    item = QTableWidgetItem(cell.value)
                     self.setItem(
                         cell.row,
                         cell.column,
-                        QTableWidgetItem(cell.value)
+                        item
+                        
                     )
 
             self.resizeColumnsToContents()
