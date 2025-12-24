@@ -80,64 +80,86 @@ class ExcelConverter:
         return headers
     
 
-    def count_empty_values_in_col(self, col_index : int = 0) -> int:
+    def count_empty_values_in_col(self, col) -> int:
         """Насчитать кол-во пустых значений"""
-
-        for cell in self.wb.worksheets[col_index]:
-            if cell.value is None or (isinstance(cell.value, str) and cell.strip() == ''):
+        empty_count = 0
+        for cell in col:
+            if cell.value is None or (isinstance(cell.value, str) and cell.value.strip() == ''):
                     empty_count += 1
         
         return empty_count
     
 
-    def define_type_in_col(self, col_index : int = 0) -> str:
+    def define_type_in_col(self, col) -> str:
         """Определить тип столбца в таблице"""
         col_info = {}
 
-        for cell in self.wb.worksheets[col_index]:
+        for cell in col:
             if cell.value is not None:
                 if isinstance(cell.value, str):
-                    col_info[TEXT_TYPE] += 1
+                    col_info[TEXT_TYPE] = 0
 
-                elif isinstance(cell.value, int, float):
-                    col_info[NUMBER_TYPE]['count'] +=1
+                elif isinstance(cell.value, (int, float)):
+                    col_info[NUMBER_TYPE] = 0
 
                 elif isinstance(cell.value, (time, date, datetime)):
-                    col_info[DATA_TIME_TYPE] +=1
+                    col_info[DATA_TIME_TYPE] = 0
                 else:
-                    col_info[OTHER_TYPE] +=1
+                    col_info[OTHER_TYPE] = 0
 
-        keys = col_info.keys()
-        if len(keys) == 1:
-            return keys[0]
+
+        if len(col_info) == 1:
+            return list(col_info.keys())[0]
         else:
             return OTHER_TYPE
         
-    def find_mix_and_max_number_in_col(self, col_index : int = 0) -> Tuple[int, int]:
+    def find_mix_and_max_number_in_col(self, col) -> Tuple[int, int]:
         """Получить максимальное и минимальное числовое значение в столбце
         Возвращает сначала минимальное, потом максмимальное
         """
         values : list = []
-        for cell in self.wb.worksheets[col_index]:
+        for cell in col:
             if isinstance(cell.value, (int, float)):
                 values.append(cell.value)
 
         return min(values), max(values)
     
 
-    def analys_col(self, col_index : int =0) -> dict:
+    def analys_col(self, col) -> dict:
         """Проанализировать столбец"""
-        col = self.wb.worksheets[col_index]
-        # col
-        # col_type = 
+        col_type = self.define_type_in_col(col)
+        analys = {
+            'name': 'test',
+            'type': col_type,
+            'empty': self.count_empty_values_in_col(col),
+        }
+
+        if col_type == NUMBER_TYPE:
+            analys['max'], analys['min'] = self.find_mix_and_max_number_in_col(col)
+            analys['mean'] = ( analys['max'], analys['min']) / 2
+        else:
+            analys['max'] = None
+            analys['min'] = None
+            analys['mean'] = None
+
+        return analys
         
     
 
     def data_analysis(self):
         """Анализ данных"""
+
+        cols = self.wb.worksheets[0].iter_cols(
+                min_col=1,
+                max_col=self.wb.worksheets[0].max_column
+            )
+        
+        cols_analys = []
+        for col in cols:
+            cols_analys.append(self.analys_col(col))
         
         return {
             'brief' : self.get_info_about_excel_file(),
             'headers': self.get_table_headers(),
-            'empty_cell' : self.count_empty_values_in_table()
+            'cols': cols_analys
         }

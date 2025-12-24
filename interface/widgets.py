@@ -102,6 +102,7 @@ class ExcelLoadDialog(QWidget):
                 
                 #логика обработки файла
                 ec = ExcelConverter(filepath=file_path)
+                print(ec.data_analysis())
                 self.workbook = ec.get_work_book()
 
                 self.set_excel_label(file_path)
@@ -112,6 +113,7 @@ class ExcelLoadDialog(QWidget):
 
 
         except Exception as ex:
+            print(ex)
             QMessageBox.critical(self, "Ошибка", "Не удалось открыть файл: {}".format(ex))
 
 
