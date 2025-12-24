@@ -11,18 +11,6 @@ DATA_TIME_TYPE = 'Дата/время'
 OTHER_TYPE = 'Смешанный'
 
 
-BASE_TYPE_FILTER_STRUCT = {
-    NUMBER_TYPE : {
-        'count': 0,
-        'min' : 0,
-        'max' : 0,
-    },
-    TEXT_TYPE: 0,
-    DATA_TIME_TYPE : 0,
-    OTHER_TYPE: 0
-}
-
-
 class ExcelConverter:
     """Класс для работы с excle файлами"""
     wb = None

@@ -11,20 +11,24 @@ from utils.excel_converters import ExcelConverter
 class ExcelLoadDialog(QWidget):
 
     excel_loaded = pyqtSignal(object)
+    excel_info_loaded = pyqtSignal(dict)
     
-    select_excel_button : QPushButton = None
-    excel_label : QLabel = None
-    clear_button : QPushButton = None 
 
-    excel_info_layout : QHBoxLayout = QHBoxLayout()
 
 
 
     def __init__(self):
         super(ExcelLoadDialog, self).__init__()
-        self.init_ui()
+        self.select_excel_button : QPushButton = None
+        self.excel_label : QLabel = None
+        self.clear_button : QPushButton = None 
+
+        self.excel_info_layout : QHBoxLayout = QHBoxLayout()
         self.excel_file = None
         self.workbook = None
+        
+        self.init_ui()
+
 
 
     def init_select_excel_btn(self):
@@ -102,14 +106,16 @@ class ExcelLoadDialog(QWidget):
                 
                 #логика обработки файла
                 ec = ExcelConverter(filepath=file_path)
-                print(ec.data_analysis())
+                
                 self.workbook = ec.get_work_book()
+                self.excel_info = ec.data_analysis()
 
                 self.set_excel_label(file_path)
                 self.enable_claer_button()
 
 
                 self.excel_loaded.emit(self.workbook)
+                self.excel_info_loaded.emit(self.excel_info)
 
 
         except Exception as ex:
@@ -168,3 +174,38 @@ class ExcelTableWidget(QTableWidget):
                     )
 
             self.resizeColumnsToContents()
+
+
+class ExcelInfoWidget(QWidget):
+    info : dict = None
+
+
+    def __init__(self, info: dict):
+        super(ExcelInfoWidget, self).__init__()
+        self.title = QLabel("Информация о таблице")
+        self.layout : QHBoxLayout = QHBoxLayout()
+        self.info = info
+        self.init_ui()
+
+
+    def init_titel(self):
+        """Настроить заголовок для блока c информацией о таблице"""
+        self.title.setStyleSheet("""
+            QLabel {
+                font-size: 24px;
+                font-weight: bold;
+                color: #2c3e50;
+                margin: 10px 0;
+                padding: 5px;
+                border-bottom: 2px solid #3498db;
+            }
+        """)
+
+    def init_ui(self):
+        self.layout.setSpacing(10)
+
+        self.init_titel()
+
+        self.layout.addWidget(self.title)
+
+        self.setLayout(self.layout)
