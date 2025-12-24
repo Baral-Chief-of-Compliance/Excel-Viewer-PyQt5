@@ -1,37 +1,80 @@
 from PyQt5.QtWidgets import QLabel, QPushButton, QVBoxLayout,\
-QHBoxLayout, QWidget, QFileDialog, QMessageBox
+QHBoxLayout, QWidget, QFileDialog, QMessageBox, QTableWidget,\
+QTableWidgetItem
+from PyQt5.QtCore import pyqtSignal
+from openpyxl import Workbook
+
+from utils.excel_converters import ExcelConverter
 
 
 class ExcelLoadDialog(QWidget):
+
+    excel_loaded = pyqtSignal(object)
+    
+    select_excel_button : QPushButton = None
+    excel_label : QLabel = None
+    clear_button : QPushButton = None 
+
+    excel_info_layout : QHBoxLayout = QHBoxLayout()
+
+
+
     def __init__(self):
         super(ExcelLoadDialog, self).__init__()
-        self.initUi()
+        self.init_ui()
         self.excel_file = None
+        self.workbook = None
 
-    def initUi(self):
-        """Инициализируем UI"""
-        layout = QVBoxLayout()
-        layout.setSpacing(10)
 
-        # Кнопка для загрузки
+    def init_select_excel_btn(self):
+        """Настроить кнопки для выбора excel файла"""
         self.select_excel_button = QPushButton("Выбрать Excel файл")
         self.select_excel_button.clicked.connect(self.select_excel_file)
         self.select_excel_button.setMinimumHeight(40)
 
-        layout.addWidget(self.select_excel_button)
-
-        #Qtlabel для отображения информации о файле
-        self.excel_info_layout = QHBoxLayout()
-
+    def init_excel_label(self):
+        """Настроить отображение информации о excel файле"""
         self.excel_label = QLabel("Файл не выбран")
         self.excel_label.setWordWrap(True)
 
-        #кнопка для открепления файла
+    def set_excel_label(self, filepath : str):
+        """Сброс текст на кнопке с excel файлом"""
+        self.excel_label.setText(filepath)
+
+
+    def init_clear_button(self):
+        """Настроить кнопку открепления файла"""
         self.clear_button = QPushButton("x")
         self.clear_button.setFixedSize(25, 25)
         self.clear_button.setToolTip("Очистить")
         self.clear_button.clicked.connect(self.clear_excel_file)
         self.clear_button.setEnabled(False)
+
+    def enable_claer_button(self):
+        """Сделать активным кнопку открепления"""
+        self.clear_button.setEnabled(True)
+
+    def disable_claer_button(self):
+        """Сдеалать неактивным кнопку открепления"""
+        self.clear_button.setEnabled(False)
+
+        
+
+    def init_ui(self):
+        """Инициализируем UI"""
+        layout = QVBoxLayout()
+        layout.setSpacing(10)
+
+        # Кнопка для загрузки
+        self.init_select_excel_btn()
+
+        layout.addWidget(self.select_excel_button)
+
+        #Qtlabel для отображения информации о файле
+        self.init_excel_label()
+
+        #кнопка для открепления файла
+        self.init_clear_button()
 
         self.excel_info_layout.addWidget(self.excel_label, 1)
         self.excel_info_layout.addWidget(self.clear_button)
@@ -57,11 +100,65 @@ class ExcelLoadDialog(QWidget):
                     return
                 
                 #логика обработки файла
-        except Exception as ex:
-            QMessageBox.critical(self, "Ошибка", "Не удалось открыть файл: {}".format(ex))                
+                ec = ExcelConverter(filepath=file_path)
+                self.workbook = ec.get_work_book()
 
+                self.set_excel_label(file_path)
+                self.enable_claer_button()
+
+
+                self.excel_loaded.emit(self.workbook)
+
+
+        except Exception as ex:
+            QMessageBox.critical(self, "Ошибка", "Не удалось открыть файл: {}".format(ex))
 
 
     def clear_excel_file(self):
         """Открепить файл"""
-        pass
+        self.set_excel_label("Файл не выбран")
+        self.disable_claer_button()
+        self.workbook = None
+
+        self.excel_loaded.emit(None)
+
+
+class ExcelTableWidget(QTableWidget):
+
+    wb : Workbook = None
+
+
+    def __init__(self, wb : Workbook):
+        super(ExcelTableWidget, self).__init__()
+        self.wb = wb
+        self.init_table()
+
+
+    def init_table(self):
+        """Инициализация таблицы"""
+        if self.wb is not None:
+            cols = self.wb.worksheets[0].iter_cols(
+                min_col=1,
+                max_col=self.wb.worksheets[0].max_column
+            )
+
+            rows = self.wb.worksheets[0].iter_rows(
+                min_row=1,
+                max_row=self.wb.worksheets[0].max_row
+
+            )
+
+            self.setColumnCount(self.wb.worksheets[0].max_column)
+
+            self.setRowCount(self.wb.worksheets[0].max_row)
+
+
+            for row in rows:
+                for cell in row:
+                    self.setItem(
+                        cell.row,
+                        cell.column,
+                        QTableWidgetItem(cell.value)
+                    )
+
+            self.resizeColumnsToContents()
