@@ -71,11 +71,10 @@ class MainWindow(QMainWindow):
                 if info is not None:
                         self.table_info_widget = ExcelInfoWidget(info=info)
 
-
                         central_layout = self.centralWidget().layout()
 
                         central_layout.addWidget(self.table_info_widget)
 
                         central_layout.addStretch(0)
 
-                        self.table_info_widget.setMinimumHeight(int(self.height() * 0.2))
+                        self.table_info_widget.setMinimumHeight(int(self.height() * 0.7))

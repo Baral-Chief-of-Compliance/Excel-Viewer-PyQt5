@@ -8,6 +8,7 @@ from PyQt5 import QtWidgets
 from openpyxl import Workbook
 
 from utils.excel_converters import ExcelConverter
+from .styles import QLABEL_INFO_EXCEL_STYLE
 
 
 class ExcelLoadDialog(QWidget):
@@ -121,7 +122,6 @@ class ExcelLoadDialog(QWidget):
 
 
         except Exception as ex:
-            print(ex)
             QMessageBox.critical(self, "Ошибка", "Не удалось открыть файл: {}".format(ex))
 
 
@@ -130,8 +130,10 @@ class ExcelLoadDialog(QWidget):
         self.set_excel_label("Файл не выбран")
         self.disable_claer_button()
         self.workbook = None
+        self.excel_file = {}
 
         self.excel_loaded.emit(None)
+        self.excel_info_loaded.emit({})
 
 
 class ExcelTableWidget(QTableWidget):
@@ -186,34 +188,72 @@ class ExcelTableWidget(QTableWidget):
 
 class ExcelInfoWidget(QWidget):
     info : dict = None
-
+    KEYS = [
+        'brief',
+        'headers',
+        'cols',
+    ]
 
     def __init__(self, info: dict):
         super(ExcelInfoWidget, self).__init__()
-        self.title = QLabel("Информация о таблице")
-        self.layout : QHBoxLayout = QHBoxLayout()
-        self.info = info
-        self.init_ui()
+        
+        self.init_status = True
+
+        for k in self.KEYS:
+            if k not in info:
+                self.init_status = False
+                
+        if self.init_status:
+            self.info = info
+            self.title = QLabel("Информация о таблице")
+            self.layout : QVBoxLayout = QVBoxLayout()
+            self.excel_cols_info = QTableWidget()
+            self.init_ui()
 
 
     def init_titel(self):
         """Настроить заголовок для блока c информацией о таблице"""
-        self.title.setStyleSheet("""
-            QLabel {
-                font-size: 24px;
-                font-weight: bold;
-                color: #2c3e50;
-                margin: 10px 0;
-                padding: 5px;
-                border-bottom: 2px solid #3498db;
-            }
-        """)
+        self.title.setStyleSheet(QLABEL_INFO_EXCEL_STYLE)
+
+    
+
+    def init_info_table(self):
+        """Настроить таблицу с информацией о каждой колонке"""
+        self.excel_cols_info.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        self.excel_cols_info.setColumnCount(6)
+        self.excel_cols_info.setRowCount(len(self.info['cols']) + 1)
+
+        #Иницилизируем heade таблицы
+        self.excel_cols_info.setItem(0,0,QTableWidgetItem('Столбец'))
+        self.excel_cols_info.setItem(0,1,QTableWidgetItem('Тип'))
+        self.excel_cols_info.setItem(0,2,QTableWidgetItem('Пустых'))
+        self.excel_cols_info.setItem(0,3,QTableWidgetItem('Min'))
+        self.excel_cols_info.setItem(0,4,QTableWidgetItem('Max'))
+        self.excel_cols_info.setItem(0,5,QTableWidgetItem('Mean'))
+
+
+        for index_row, ic in enumerate(self.info['cols']):
+            for index_col, k in enumerate(ic.keys()):
+                self.excel_cols_info.setItem(
+                    index_row + 1,
+                    index_col,
+                    QTableWidgetItem(ic[k])
+                )
+
+        self.excel_cols_info.resizeColumnsToContents()
+
 
     def init_ui(self):
         self.layout.setSpacing(10)
 
         self.init_titel()
+        self.init_info_table()
 
         self.layout.addWidget(self.title)
+        
+        self.layout.addStretch(0)
+
+        self.layout.addWidget(self.excel_cols_info)
 
         self.setLayout(self.layout)

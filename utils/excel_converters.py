@@ -113,22 +113,22 @@ class ExcelConverter:
         return min(values), max(values)
     
 
-    def analys_col(self, col) -> dict:
+    def analys_col(self, col, name : str = 'Неизвестно') -> dict:
         """Проанализировать столбец"""
         col_type = self.define_type_in_col(col)
         analys = {
-            'name': 'test',
+            'name': name,
             'type': col_type,
-            'empty': self.count_empty_values_in_col(col),
+            'empty': str(self.count_empty_values_in_col(col)),
         }
 
         if col_type == NUMBER_TYPE:
             analys['max'], analys['min'] = self.find_mix_and_max_number_in_col(col)
             analys['mean'] = ( analys['max'], analys['min']) / 2
         else:
-            analys['max'] = None
-            analys['min'] = None
-            analys['mean'] = None
+            analys['max'] = 'Отсутствует'
+            analys['min'] = 'Отсутствует'
+            analys['mean'] = 'Отсутствует'
 
         return analys
         
@@ -144,7 +144,7 @@ class ExcelConverter:
         
         cols_analys = []
         for col in cols:
-            cols_analys.append(self.analys_col(col))
+            cols_analys.append(self.analys_col(col, col[0].column_letter))
         
         return {
             'brief' : self.get_info_about_excel_file(),
