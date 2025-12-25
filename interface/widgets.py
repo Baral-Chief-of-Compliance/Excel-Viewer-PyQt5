@@ -8,7 +8,7 @@ from PyQt5 import QtWidgets
 from openpyxl import Workbook
 
 from utils.excel_converters import ExcelConverter
-from .styles import QLABEL_INFO_EXCEL_STYLE
+from .styles import QLABEL_INFO_EXCEL_STYLE, QLABEL_BRIED_INFO_TABLE
 
 
 class ExcelLoadDialog(QWidget):
@@ -16,9 +16,6 @@ class ExcelLoadDialog(QWidget):
     excel_loaded = pyqtSignal(object)
     excel_info_loaded = pyqtSignal(dict)
     
-
-
-
 
     def __init__(self):
         super(ExcelLoadDialog, self).__init__()
@@ -33,17 +30,18 @@ class ExcelLoadDialog(QWidget):
         self.init_ui()
 
 
-
     def init_select_excel_btn(self):
         """Настроить кнопки для выбора excel файла"""
         self.select_excel_button = QPushButton("Выбрать Excel файл")
         self.select_excel_button.clicked.connect(self.select_excel_file)
         self.select_excel_button.setMinimumHeight(40)
 
+
     def init_excel_label(self):
         """Настроить отображение информации о excel файле"""
         self.excel_label = QLabel("Файл не выбран")
         self.excel_label.setWordWrap(True)
+
 
     def set_excel_label(self, filepath : str):
         """Сброс текст на кнопке с excel файлом"""
@@ -58,16 +56,17 @@ class ExcelLoadDialog(QWidget):
         self.clear_button.clicked.connect(self.clear_excel_file)
         self.clear_button.setEnabled(False)
 
+
     def enable_claer_button(self):
         """Сделать активным кнопку открепления"""
         self.clear_button.setEnabled(True)
+
 
     def disable_claer_button(self):
         """Сдеалать неактивным кнопку открепления"""
         self.clear_button.setEnabled(False)
 
         
-
     def init_ui(self):
         """Инициализируем UI"""
         layout = QVBoxLayout()
@@ -140,7 +139,6 @@ class ExcelTableWidget(QTableWidget):
 
     wb : Workbook = None
 
-
     def __init__(self, wb : Workbook):
         super(ExcelTableWidget, self).__init__()
         self.wb = wb
@@ -202,12 +200,13 @@ class ExcelInfoWidget(QWidget):
         for k in self.KEYS:
             if k not in info:
                 self.init_status = False
-                
+
         if self.init_status:
             self.info = info
             self.title = QLabel("Информация о таблице")
             self.layout : QVBoxLayout = QVBoxLayout()
             self.excel_cols_info = QTableWidget()
+            self.brief_info : QWidget = QWidget()
             self.init_ui()
 
 
@@ -216,7 +215,36 @@ class ExcelInfoWidget(QWidget):
         self.title.setStyleSheet(QLABEL_INFO_EXCEL_STYLE)
 
     
+    def get_label_for_brief(self, lable : str) -> QLabel:
+        """Получить QLabel для краткой информации о таблице"""
+        return QLabel(lable).setStyleSheet(QLABEL_BRIED_INFO_TABLE)
 
+
+    def init_brief_info_table(self):
+        """Настроить краткую информацию о таблице (колонки, строки, список имен)"""
+
+        info_filename = QHBoxLayout()
+        info_filename.addWidget(self.get_label_for_brief('Наименование файла'))
+        info_filename.addWidget(self.get_label_for_brief(str(self.info['brief']['filename'])))
+        self.brief_info.(info_filename)
+
+        info_sheetname = QHBoxLayout()
+        info_sheetname.addWidget(self.get_label_for_brief('Наименование листа'))
+        info_sheetname.addWidget(self.get_label_for_brief(str(self.info['brief']['sheetname'])))
+        self.brief_info.addWidget(info_sheetname)
+
+        info_row = QHBoxLayout()
+        info_row.addWidget(self.get_label_for_brief('Количество строк'))
+        info_row.addWidget(self.get_label_for_brief(str(self.info['brief']['rows_num'])))
+        self.brief_info.addWidget(info_row)
+
+        info_col = QHBoxLayout()
+        info_col.addWidget(self.get_label_for_brief('Количество столбцов'))
+        info_col.addWidget(self.get_label_for_brief(str(self.info['brief']['cols_num'])))
+        self.brief_info.addWidget(info_col)
+
+
+    
     def init_info_table(self):
         """Настроить таблицу с информацией о каждой колонке"""
         self.excel_cols_info.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -249,11 +277,16 @@ class ExcelInfoWidget(QWidget):
 
         self.init_titel()
         self.init_info_table()
+        self.init_brief_info_table()
 
         self.layout.addWidget(self.title)
         
         self.layout.addStretch(0)
 
         self.layout.addWidget(self.excel_cols_info)
+
+        self.layout.addStretch(0)
+
+        self.layout.addWidget(self.brief_info)
 
         self.setLayout(self.layout)
