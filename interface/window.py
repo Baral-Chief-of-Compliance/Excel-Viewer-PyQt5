@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 
-from .widgets import ExcelLoadDialog, ExcelTableWidget, ExcelInfoWidget
+from .widgets import ExcelLoadWidget, ExcelTableWidget, ExcelInfoWidget
 
 
 class MainWindow(QMainWindow):
@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
 
                 centeral_widget.setLayout(layout)
 
-                self.excel_load_dialog = ExcelLoadDialog()
+                self.excel_load_dialog = ExcelLoadWidget()
 
                 self.excel_load_dialog.excel_loaded.connect(self.handle_excel_loaded)
                 self.excel_load_dialog.excel_info_loaded.connect(self.handle_info_about_excel)
